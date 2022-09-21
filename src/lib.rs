@@ -34,7 +34,7 @@ pub struct Piece {
 
 pub struct Game {
     state: GameState,
-    board: [[Option<Piece>; 8]; 8],
+    board: [[Piece; 8]; 8],
 }
 
 impl Game {
@@ -42,8 +42,24 @@ impl Game {
     pub fn new() -> Game {
         Game {
             state: GameState::InProgress,
-            board: [[None; 8]; 8],
+            board: [[Piece {
+                color: Color::White,
+                piece: PieceType::Pawn,
+            }; 8]; 8],
         }
+    }
+
+    pub fn setup_initial_board(&mut self) -> () {
+        let white_pawn = Piece {
+            color: Color::White,
+            piece: PieceType::Pawn,
+        };
+        let black_pawn = Piece {
+            color: Color::White,
+            piece: PieceType::Pawn,
+        };
+        self.board[0] = [white_pawn; 8];
+        self.board[7] = [black_pawn; 8];
     }
 
     /// If the current game state is InProgress and the move is legal,
@@ -113,7 +129,8 @@ mod tests {
     // check that game state is in progress after initialisation
     #[test]
     fn game_in_progress_after_init() {
-        let game = Game::new();
+        let mut game = Game::new();
+        game.setup_initial_board();
 
         println!("{:?}", game);
 
