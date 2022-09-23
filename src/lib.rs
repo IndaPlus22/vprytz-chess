@@ -34,7 +34,7 @@ pub struct Piece {
 
 pub struct Game {
     state: GameState,
-    board: [[Piece; 8]; 8],
+    board: [[Option<Piece>; 8]; 8],
 }
 
 impl Game {
@@ -42,23 +42,22 @@ impl Game {
     pub fn new() -> Game {
         Game {
             state: GameState::InProgress,
-            board: [[Piece {
-                color: Color::White,
-                piece: PieceType::Pawn,
-            }; 8]; 8],
+            board: [[None; 8]; 8],
         }
     }
 
     pub fn setup_initial_board(&mut self) -> () {
-        let white_pawn = Piece {
+        let white_pawn = Some(Piece {
             color: Color::White,
             piece: PieceType::Pawn,
-        };
-        let black_pawn = Piece {
+        });
+        let black_pawn = Some(Piece {
             color: Color::White,
             piece: PieceType::Pawn,
-        };
+        });
         self.board[0] = [white_pawn; 8];
+        self.board[1] = [white_pawn; 8];
+        self.board[6] = [black_pawn; 8];
         self.board[7] = [black_pawn; 8];
     }
 
