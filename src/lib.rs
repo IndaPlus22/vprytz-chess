@@ -30,6 +30,7 @@ pub enum PieceType {
 pub struct Piece {
     color: Color,
     piece: PieceType,
+    untouched: bool,
 }
 
 pub struct Game {
@@ -50,63 +51,64 @@ impl Game {
         let white_pawn = Some(Piece {
             color: Color::White,
             piece: PieceType::Pawn,
+            untouched: true,
         });
         let black_pawn = Some(Piece {
-            color: Color::White,
+            color: Color::Black,
             piece: PieceType::Pawn,
+            untouched: true,
         });
         let white_rook = Some(Piece {
             color: Color::White,
             piece: PieceType::Rook,
+            untouched: true,
         });
         let black_rook = Some(Piece {
-            color: Color::White,
+            color: Color::Black,
             piece: PieceType::Rook,
+            untouched: true,
         });
         let white_knight = Some(Piece {
             color: Color::White,
             piece: PieceType::Knight,
+            untouched: true,
         });
         let black_knight = Some(Piece {
-            color: Color::White,
+            color: Color::Black,
             piece: PieceType::Knight,
+            untouched: true,
         });
         let white_bishop = Some(Piece {
             color: Color::White,
             piece: PieceType::Bishop,
+            untouched: true,
         });
         let black_bishop = Some(Piece {
-            color: Color::White,
+            color: Color::Black,
             piece: PieceType::Bishop,
+            untouched: true,
         });
         let white_queen = Some(Piece {
             color: Color::White,
             piece: PieceType::Queen,
+            untouched: true,
         });
         let black_queen = Some(Piece {
-            color: Color::White,
+            color: Color::Black,
             piece: PieceType::Queen,
+            untouched: true,
         });
         let white_king = Some(Piece {
             color: Color::White,
             piece: PieceType::King,
+            untouched: true,
         });
         let black_king = Some(Piece {
-            color: Color::White,
+            color: Color::Black,
             piece: PieceType::King,
+            untouched: true,
         });
         self.board[0] = [
-            white_rook,
-            white_knight,
-            white_bishop,
-            white_queen,
-            white_king,
-            white_bishop,
-            white_knight,
-            white_rook,
-        ];
-        self.board[1] = [white_pawn; 8];
-        self.board[6] = [
             black_rook,
             black_knight,
             black_bishop,
@@ -116,7 +118,19 @@ impl Game {
             black_knight,
             black_rook,
         ];
-        self.board[7] = [black_pawn; 8];
+        self.board[1] = [black_pawn; 8];
+
+        self.board[6] = [white_pawn; 8];
+        self.board[7] = [
+            white_rook,
+            white_knight,
+            white_bishop,
+            white_queen,
+            white_king,
+            white_bishop,
+            white_knight,
+            white_rook,
+        ];
     }
 
     /// If the current game state is InProgress and the move is legal,
@@ -150,7 +164,32 @@ impl Game {
         // get piece at given position
         let piece = self.board[pos.0][pos.1];
 
+        // print piece
         println!("{:?}", piece);
+
+        // different move sets for different PieceTypes
+        match piece {
+            Some(Piece {
+                piece: PieceType::Pawn,
+                ..
+            }) => {
+                let mut vec: Vec<String> = Vec::with_capacity(5);
+                let op: i32 = match piece.unwrap().color {
+                    Color::White => 1,
+                    Color::Black => -1,
+                };
+
+                vec.push(self.index_to_pos(((pos.0 as i32 - 1 * op) as usize, pos.1))); // forward (up/down) one
+                vec.push(self.index_to_pos(((pos.0 as i32 - 2 * op) as usize, pos.1))); // forward (up/down) two (only if first move!)
+                vec.push(self.index_to_pos(((pos.0 as i32 + 1 * op) as usize, pos.1))); // downward (down/up) one
+                vec.push(self.index_to_pos(((pos.0 as i32 - 1 * op) as usize, pos.1 - 1))); // attack left
+                vec.push(self.index_to_pos(((pos.0 as i32 - 1 * op) as usize, pos.1 + 1))); // attack left
+
+                return Some(vec);
+            }
+            None => return None,
+            _ => todo!("not yet implemented"),
+        }
 
         None
     }
@@ -256,5 +295,36 @@ mod tests {
         assert_eq!(game.index_to_pos((7, 0)), "A1");
         assert_eq!(game.index_to_pos((0, 7)), "H8");
         assert_eq!(game.index_to_pos((7, 7)), "H1");
+    }
+
+    // test some moves
+    #[test]
+    fn test_piece_moves() {
+        let mut game = Game::new();
+        game.setup_initial_board();
+
+        // test pawn moves
+        // try white pawn
+        assert_eq!(
+            game.get_possible_moves("D2".to_string()),
+            Some(vec![
+                "D3".to_string(),
+                "D4".to_string(),
+                "D1".to_string(),
+                "C3".to_string(),
+                "E3".to_string(),
+            ])
+        );
+        // try black pawn
+        assert_eq!(
+            game.get_possible_moves("D7".to_string()),
+            Some(vec![
+                "D6".to_string(),
+                "D5".to_string(),
+                "D8".to_string(),
+                "C6".to_string(),
+                "E6".to_string(),
+            ])
+        );
     }
 }
