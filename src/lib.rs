@@ -55,9 +55,67 @@ impl Game {
             color: Color::White,
             piece: PieceType::Pawn,
         });
-        self.board[0] = [white_pawn; 8];
+        let white_rook = Some(Piece {
+            color: Color::White,
+            piece: PieceType::Rook,
+        });
+        let black_rook = Some(Piece {
+            color: Color::White,
+            piece: PieceType::Rook,
+        });
+        let white_knight = Some(Piece {
+            color: Color::White,
+            piece: PieceType::Knight,
+        });
+        let black_knight = Some(Piece {
+            color: Color::White,
+            piece: PieceType::Knight,
+        });
+        let white_bishop = Some(Piece {
+            color: Color::White,
+            piece: PieceType::Bishop,
+        });
+        let black_bishop = Some(Piece {
+            color: Color::White,
+            piece: PieceType::Bishop,
+        });
+        let white_queen = Some(Piece {
+            color: Color::White,
+            piece: PieceType::Queen,
+        });
+        let black_queen = Some(Piece {
+            color: Color::White,
+            piece: PieceType::Queen,
+        });
+        let white_king = Some(Piece {
+            color: Color::White,
+            piece: PieceType::King,
+        });
+        let black_king = Some(Piece {
+            color: Color::White,
+            piece: PieceType::King,
+        });
+        self.board[0] = [
+            white_rook,
+            white_knight,
+            white_bishop,
+            white_queen,
+            white_king,
+            white_bishop,
+            white_knight,
+            white_rook,
+        ];
         self.board[1] = [white_pawn; 8];
-        self.board[6] = [black_pawn; 8];
+        self.board[6] = [
+            black_rook,
+            black_knight,
+            black_bishop,
+            black_queen,
+            black_king,
+            black_bishop,
+            black_knight,
+            black_rook,
+        ];
         self.board[7] = [black_pawn; 8];
     }
 
@@ -66,7 +124,7 @@ impl Game {
     pub fn make_move(&mut self, from: String, to: String) -> Option<GameState> {
         let mut vec: Vec<String> = Vec::with_capacity(60);
 
-        None
+        return Some(self.get_game_state());
     }
 
     /// Set the piece type that a peasant becames following a promotion.
