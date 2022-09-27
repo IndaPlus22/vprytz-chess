@@ -122,6 +122,9 @@ impl Game {
     /// If the current game state is InProgress and the move is legal,
     /// move a piece and return the resulting state of the game.
     pub fn make_move(&mut self, from: String, to: String) -> Option<GameState> {
+        let from = self.pos_to_index(from);
+        let to = self.pos_to_index(to);
+
         let mut vec: Vec<String> = Vec::with_capacity(60);
 
         return Some(self.get_game_state());
@@ -143,6 +146,19 @@ impl Game {
     /// (optional) Don't forget to include en passent and castling.
     pub fn get_possible_moves(&self, postion: String) -> Option<Vec<String>> {
         None
+    }
+
+    // convert two letter position to index in 2d array
+    fn pos_to_index(&self, pos: String) -> (usize, usize) {
+        let mut chars = pos.chars();
+        // when using "as usize", A will be 97, B will be 98 and so on ...
+        // meaning if we subtract 97 we will get the correct index
+        let x = chars.next().unwrap() as usize - 97;
+
+        // same here, but instead of subtracting 97 we subtract 49
+        // since 49 is the ascii value of 1
+        let y = chars.next().unwrap() as usize - 49;
+        (x, y)
     }
 }
 
@@ -192,5 +208,14 @@ mod tests {
         println!("{:?}", game);
 
         assert_eq!(game.get_game_state(), GameState::InProgress);
+    }
+
+    // test converting pos to index
+    #[test]
+    fn convert_pos_to_index() {
+        let mut game = Game::new();
+        game.setup_initial_board();
+
+        assert_eq!(game.pos_to_index("a1".to_string()), (0, 0));
     }
 }
