@@ -145,20 +145,43 @@ impl Game {
     ///
     /// (optional) Don't forget to include en passent and castling.
     pub fn get_possible_moves(&self, postion: String) -> Option<Vec<String>> {
+        let pos = self.pos_to_index(postion);
+
+        // get piece at given position
+        let piece = self.board[pos.0][pos.1];
+
+        println!("{:?}", piece);
+
         None
     }
 
     // convert two letter position to index in 2d array
     fn pos_to_index(&self, pos: String) -> (usize, usize) {
+        // convert pos to lowercase non-borrowed string and then chars
+        let pos = pos.to_lowercase();
         let mut chars = pos.chars();
+
         // when using "as usize", A will be 97, B will be 98 and so on ...
         // meaning if we subtract 97 we will get the correct index
-        let x = chars.next().unwrap() as usize - 97;
+        let y = chars.next().unwrap() as usize - 97;
 
         // same here, but instead of subtracting 97 we subtract 49
         // since 49 is the ascii value of 1
-        let y = chars.next().unwrap() as usize - 49;
+        // our array increases index from top to bottom, so we need to
+        // include "7 -" since chess uses increasing from bottom to top
+        let x = 7 - (chars.next().unwrap() as usize - 49);
+
         (x, y)
+    }
+
+    // convert index in 2d array to two letter position
+    fn index_to_pos(&self, index: (usize, usize)) -> String {
+        // basically the reverse of pos_to_index
+        // we convert the index to "ascii value" and then to char
+        // we use as u8 since usize cannot be converted to char directly
+        let y = (index.1 + 97) as u8 as char;
+        let x = (7 - index.0 + 49) as u8 as char;
+        format!("{}{}", y.to_uppercase(), x)
     }
 }
 
@@ -216,6 +239,22 @@ mod tests {
         let mut game = Game::new();
         game.setup_initial_board();
 
-        assert_eq!(game.pos_to_index("a1".to_string()), (0, 0));
+        assert_eq!(game.pos_to_index("a1".to_string()), (7, 0));
+        assert_eq!(game.pos_to_index("B1".to_string()), (7, 1));
+        assert_eq!(game.pos_to_index("A8".to_string()), (0, 0));
+        assert_eq!(game.pos_to_index("H8".to_string()), (0, 7));
+        assert_eq!(game.pos_to_index("H1".to_string()), (7, 7));
+    }
+
+    // test index to pos
+    #[test]
+    fn convert_index_to_pos() {
+        let mut game = Game::new();
+        game.setup_initial_board();
+
+        assert_eq!(game.index_to_pos((0, 0)), "A8");
+        assert_eq!(game.index_to_pos((7, 0)), "A1");
+        assert_eq!(game.index_to_pos((0, 7)), "H8");
+        assert_eq!(game.index_to_pos((7, 7)), "H1");
     }
 }
