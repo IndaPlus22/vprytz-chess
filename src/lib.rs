@@ -568,5 +568,17 @@ mod tests {
             .sort()
         );
         println!("{:?}", game);
+        // move B7 to B5
+        assert_eq!(
+            game.make_move("B7".to_string(), "B5".to_string()),
+            Some(GameState::InProgress)
+        );
+        println!("{:?}", game);
+        // get the pawn with the knight by moving it to B5
+        assert_eq!(
+            game.make_move("C3".to_string(), "B5".to_string()),
+            Some(GameState::InProgress)
+        );
+        println!("{:?}", game);
     }
 }
