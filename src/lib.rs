@@ -26,11 +26,32 @@ pub enum PieceType {
     Pawn,
 }
 
+// copyed example from https://users.rust-lang.org/t/how-can-i-implement-fmt-display-for-enum/24111/2
+impl fmt::Display for PieceType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            PieceType::King => write!(f, "K "),
+            PieceType::Queen => write!(f, "Q "),
+            PieceType::Rook => write!(f, "R "),
+            PieceType::Bishop => write!(f, "B "),
+            PieceType::Knight => write!(f, "Kn"),
+            PieceType::Pawn => write!(f, "P "),
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Piece {
     color: Color,
     piece: PieceType,
     untouched: bool,
+}
+
+// copied base example from https://doc.rust-lang.org/rust-by-example/hello/print/print_display.html
+impl fmt::Display for Piece {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.piece)
+    }
 }
 
 pub struct Game {
@@ -136,12 +157,36 @@ impl Game {
     /// If the current game state is InProgress and the move is legal,
     /// move a piece and return the resulting state of the game.
     pub fn make_move(&mut self, from: String, to: String) -> Option<GameState> {
-        let from = self.pos_to_index(from);
-        let to = self.pos_to_index(to);
+        // check if move is legal by checking if "to" position is in get_possible_moves()
+        let possible_moves = self.get_possible_moves(from.to_string());
 
-        let mut vec: Vec<String> = Vec::with_capacity(60);
+        // check that "to" is in possible_moves
+        // sourcde https://stackoverflow.com/questions/58368801/how-do-i-check-if-a-thing-is-in-a-vector#58368936
+        if possible_moves.unwrap().contains(&to) {
+            // move piece
+            let from_index = self.pos_to_index(from.to_string());
+            let to_index = self.pos_to_index(to.to_string());
 
-        return Some(self.get_game_state());
+            let piece = self.board[from_index.0][from_index.1];
+
+            // set piece as touched
+            let mut piece = piece.unwrap();
+            piece.untouched = false;
+
+            self.board[from_index.0][from_index.1] = None;
+            self.board[to_index.0][to_index.1] = Some(piece);
+
+            // check if game is over
+            // if self.is_checkmate() {
+            //     self.state = GameState::GameOver;
+            // } else if self.is_check() {
+            //     self.state = GameState::Check;
+            // }
+
+            return Some(self.get_game_state());
+        } else {
+            return None;
+        }
     }
 
     /// Set the piece type that a peasant becames following a promotion.
@@ -164,8 +209,10 @@ impl Game {
         // get piece at given position
         let piece = self.board[pos.0][pos.1];
 
-        // print piece
-        println!("{:?}", piece);
+        let op: i32 = match piece.unwrap().color {
+            Color::White => 1,
+            Color::Black => -1,
+        };
 
         // different move sets for different PieceTypes
         match piece {
@@ -174,16 +221,48 @@ impl Game {
                 ..
             }) => {
                 let mut vec: Vec<String> = Vec::with_capacity(5);
-                let op: i32 = match piece.unwrap().color {
-                    Color::White => 1,
-                    Color::Black => -1,
-                };
 
-                vec.push(self.index_to_pos(((pos.0 as i32 - 1 * op) as usize, pos.1))); // forward (up/down) one
-                vec.push(self.index_to_pos(((pos.0 as i32 - 2 * op) as usize, pos.1))); // forward (up/down) two (only if first move!)
-                vec.push(self.index_to_pos(((pos.0 as i32 + 1 * op) as usize, pos.1))); // downward (down/up) one
-                vec.push(self.index_to_pos(((pos.0 as i32 - 1 * op) as usize, pos.1 - 1))); // attack left
-                vec.push(self.index_to_pos(((pos.0 as i32 - 1 * op) as usize, pos.1 + 1))); // attack left
+                // add possible moves only if they are empty
+                if self.board[(pos.0 as i32 - 1 * op) as usize][pos.1].is_none() {
+                    vec.push(self.index_to_pos(((pos.0 as i32 - 1 * op) as usize, pos.1)));
+                    // forward (up/down) one
+                }
+
+                if self.board[(pos.0 as i32 - 2 * op) as usize][pos.1].is_none()
+                    && self.board[(pos.0 as i32 - 1 * op) as usize][pos.1].is_none()
+                    && piece.unwrap().untouched
+                {
+                    vec.push(self.index_to_pos(((pos.0 as i32 - 2 * op) as usize, pos.1)));
+                    // forward (up/down) two (only if first move!)
+                }
+
+                if self.board[(pos.0 as i32 + 1 * op) as usize][pos.1].is_none() {
+                    vec.push(self.index_to_pos(((pos.0 as i32 + 1 * op) as usize, pos.1)));
+                    // downward (down/up) one
+                }
+
+                // attack moves only if the specified positions is occupied by an enemy piece
+                // we check that there is something there and that the piece there actually has a different color
+                // than our piece
+                if self.board[(pos.0 as i32 - 1 * op) as usize][pos.1 + 1].is_some()
+                    && self.board[(pos.0 as i32 - 1 * op) as usize][pos.1 + 1]
+                        .unwrap()
+                        .color
+                        != piece.unwrap().color
+                {
+                    vec.push(self.index_to_pos(((pos.0 as i32 - 1 * op) as usize, pos.1 + 1)));
+                    // forward (up/down) one and right (attack right)
+                }
+
+                if self.board[(pos.0 as i32 - 1 * op) as usize][pos.1 - 1].is_some()
+                    && self.board[(pos.0 as i32 - 1 * op) as usize][pos.1 - 1]
+                        .unwrap()
+                        .color
+                        != piece.unwrap().color
+                {
+                    vec.push(self.index_to_pos(((pos.0 as i32 - 1 * op) as usize, pos.1 - 1)));
+                    // forward (up/down) one and left (attack left)
+                }
 
                 return Some(vec);
             }
@@ -240,8 +319,27 @@ impl Game {
 impl fmt::Debug for Game {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         /* build board representation string */
+        let mut board = String::new();
 
-        write!(f, "")
+        // add top border
+        board.push_str("\n|:----------------------:|");
+
+        // iterate over board and print each piece as letter representation
+        for row in self.board.iter() {
+            board.push_str("\n|");
+            for piece in row.iter() {
+                match piece {
+                    Some(p) => board.push_str(&format!(" {}", p)),
+                    None => board.push_str(" * "),
+                }
+            }
+            board.push_str("|");
+        }
+
+        // add bottom border
+        board.push_str("\n|:----------------------:|");
+
+        write!(f, "{}", board)
     }
 }
 
@@ -307,24 +405,50 @@ mod tests {
         // try white pawn
         assert_eq!(
             game.get_possible_moves("D2".to_string()),
-            Some(vec![
-                "D3".to_string(),
-                "D4".to_string(),
-                "D1".to_string(),
-                "C3".to_string(),
-                "E3".to_string(),
-            ])
+            Some(vec!["D3".to_string(), "D4".to_string(),]) // can only move forward one or two steps
         );
         // try black pawn
         assert_eq!(
             game.get_possible_moves("D7".to_string()),
-            Some(vec![
-                "D6".to_string(),
-                "D5".to_string(),
-                "D8".to_string(),
-                "C6".to_string(),
-                "E6".to_string(),
-            ])
+            Some(vec!["D6".to_string(), "D5".to_string(),])
         );
+
+        // try white pawn at the very left
+        assert_eq!(
+            game.get_possible_moves("D2".to_string()),
+            Some(vec!["D3".to_string(), "D4".to_string(),])
+        );
+
+        // try moving D2 pawn to D4
+        assert_eq!(
+            game.make_move("D2".to_string(), "D4".to_string()),
+            Some(GameState::InProgress)
+        );
+
+        println!("{:?}", game);
+
+        // check that we have right moves for this newly moved pawn
+        assert_eq!(
+            game.get_possible_moves("D4".to_string()),
+            Some(vec!["D5".to_string(), "D3".to_string(),])
+        );
+        // then move a black pawn down, C7 to C5
+        assert_eq!(
+            game.make_move("C7".to_string(), "C5".to_string()),
+            Some(GameState::InProgress)
+        );
+        println!("{:?}", game);
+
+        // now check that the white pawn has right moves, that it can attack the black pawn
+        assert_eq!(
+            game.get_possible_moves("D4".to_string()),
+            Some(vec!["D5".to_string(), "D3".to_string(), "C5".to_string()])
+        );
+        // then attack the black pawn
+        assert_eq!(
+            game.make_move("D4".to_string(), "C5".to_string()),
+            Some(GameState::InProgress)
+        );
+        println!("{:?}", game);
     }
 }
