@@ -3,6 +3,8 @@
 
 use std::fmt;
 
+const BOARD_SIZE: usize = 8;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum GameState {
     InProgress,
@@ -56,7 +58,7 @@ impl fmt::Display for Piece {
 
 pub struct Game {
     state: GameState,
-    board: [[Option<Piece>; 8]; 8],
+    board: [[Option<Piece>; BOARD_SIZE]; BOARD_SIZE],
 }
 
 impl Game {
@@ -64,7 +66,7 @@ impl Game {
     pub fn new() -> Game {
         Game {
             state: GameState::InProgress,
-            board: [[None; 8]; 8],
+            board: [[None; BOARD_SIZE]; BOARD_SIZE],
         }
     }
 
@@ -139,9 +141,9 @@ impl Game {
             black_knight,
             black_rook,
         ];
-        self.board[1] = [black_pawn; 8];
+        self.board[1] = [black_pawn; BOARD_SIZE];
 
-        self.board[6] = [white_pawn; 8];
+        self.board[6] = [white_pawn; BOARD_SIZE];
         self.board[7] = [
             white_rook,
             white_knight,
@@ -216,6 +218,9 @@ impl Game {
 
         // different move sets for different PieceTypes
         match piece {
+            //
+            // PAWN
+            //
             Some(Piece {
                 piece: PieceType::Pawn,
                 ..
@@ -266,11 +271,95 @@ impl Game {
 
                 return Some(vec);
             }
-            None => return None,
-            _ => todo!("not yet implemented"),
-        }
+            //
+            // ROOK
+            //
+            Some(Piece {
+                piece: PieceType::Rook,
+                ..
+            }) => {
+                let mut vec: Vec<String> = Vec::with_capacity(5);
 
-        None
+                // get all possible moves in all directions
+
+                return Some(vec);
+            }
+            //
+            // BISHOP
+            //
+            Some(Piece {
+                piece: PieceType::Bishop,
+                ..
+            }) => {
+                let mut vec: Vec<String> = Vec::with_capacity(5);
+
+                return Some(vec);
+            }
+            //
+            // KNIGHT
+            //
+            Some(Piece {
+                piece: PieceType::Knight,
+                ..
+            }) => {
+                let mut vec: Vec<String> = Vec::with_capacity(5);
+
+                // make list of positions to check
+                let positions = [
+                    // forward and left/right
+                    ((pos.0 as i32 - 2 * op), (pos.1 as i32 + 1)), // two pieces "forward" and one right
+                    ((pos.0 as i32 - 2 * op), (pos.1 as i32 - 1)), // two pieces "forward" and one left
+                    // backwards and left/right
+                    ((pos.0 as i32 + 2 * op), (pos.1 as i32 + 1)), // two pieces "backward" and one right
+                    ((pos.0 as i32 + 2 * op), (pos.1 as i32 - 1)), // two pieces "backward" and one left
+                    // left and up/down
+                    ((pos.0 as i32 + 1 * op), (pos.1 as i32 - 2)), // two pieces "left" and one "down"
+                    ((pos.0 as i32 - 1 * op), (pos.1 as i32 - 2)), // two pieces "left" and one "up"
+                    // right and up/down
+                    ((pos.0 as i32 + 1 * op), (pos.1 as i32 + 2)), // two pieces "right" and one "down"
+                    ((pos.0 as i32 - 1 * op), (pos.1 as i32 + 2)), // two pieces "right" and one "up"
+                ];
+
+                // check for each position that it is on the board and that it is either empty or occupied by an enemy piece
+                for pos in positions.iter() {
+                    if pos.0 < 8
+                        && pos.0 >= 0
+                        && pos.1 < 8
+                        && pos.1 >= 0
+                        && (self.board[pos.0 as usize][pos.1 as usize].is_none()
+                            || self.board[pos.0 as usize][pos.1 as usize].unwrap().color
+                                != piece.unwrap().color)
+                    {
+                        vec.push(self.index_to_pos((pos.0 as usize, pos.1 as usize)));
+                    }
+                }
+
+                return Some(vec);
+            }
+            //
+            // QUEEN
+            //
+            Some(Piece {
+                piece: PieceType::Queen,
+                ..
+            }) => {
+                let mut vec: Vec<String> = Vec::with_capacity(5);
+
+                return Some(vec);
+            }
+            //
+            // KING
+            //
+            Some(Piece {
+                piece: PieceType::King,
+                ..
+            }) => {
+                let mut vec: Vec<String> = Vec::with_capacity(5);
+
+                return Some(vec);
+            }
+            None => return None,
+        }
     }
 
     // convert two letter position to index in 2d array
@@ -395,28 +484,28 @@ mod tests {
         assert_eq!(game.index_to_pos((7, 7)), "H1");
     }
 
-    // test some moves
+    // test some pawn
     #[test]
-    fn test_piece_moves() {
+    fn test_pawn_moves() {
         let mut game = Game::new();
         game.setup_initial_board();
 
         // test pawn moves
         // try white pawn
         assert_eq!(
-            game.get_possible_moves("D2".to_string()),
-            Some(vec!["D3".to_string(), "D4".to_string(),]) // can only move forward one or two steps
+            game.get_possible_moves("D2".to_string()).unwrap().sort(),
+            vec!["D3".to_string(), "D4".to_string(),].sort()
         );
         // try black pawn
         assert_eq!(
-            game.get_possible_moves("D7".to_string()),
-            Some(vec!["D6".to_string(), "D5".to_string(),])
+            game.get_possible_moves("D7".to_string()).unwrap().sort(),
+            vec!["D6".to_string(), "D5".to_string(),].sort()
         );
 
         // try white pawn at the very left
         assert_eq!(
-            game.get_possible_moves("D2".to_string()),
-            Some(vec!["D3".to_string(), "D4".to_string(),])
+            game.get_possible_moves("D2".to_string()).unwrap().sort(),
+            vec!["D3".to_string(), "D4".to_string(),].sort()
         );
 
         // try moving D2 pawn to D4
@@ -429,8 +518,8 @@ mod tests {
 
         // check that we have right moves for this newly moved pawn
         assert_eq!(
-            game.get_possible_moves("D4".to_string()),
-            Some(vec!["D5".to_string(), "D3".to_string(),])
+            game.get_possible_moves("D4".to_string()).unwrap().sort(),
+            vec!["D5".to_string(), "D3".to_string(),].sort()
         );
         // then move a black pawn down, C7 to C5
         assert_eq!(
@@ -441,13 +530,42 @@ mod tests {
 
         // now check that the white pawn has right moves, that it can attack the black pawn
         assert_eq!(
-            game.get_possible_moves("D4".to_string()),
-            Some(vec!["D5".to_string(), "D3".to_string(), "C5".to_string()])
+            game.get_possible_moves("D4".to_string()).unwrap().sort(),
+            vec!["D5".to_string(), "D3".to_string(), "C5".to_string()].sort()
         );
         // then attack the black pawn
         assert_eq!(
             game.make_move("D4".to_string(), "C5".to_string()),
             Some(GameState::InProgress)
+        );
+        println!("{:?}", game);
+    }
+    // test some knight moves
+    #[test]
+    fn test_knight_moves() {
+        let mut game = Game::new();
+        game.setup_initial_board();
+
+        println!("{:?}", game);
+
+        assert_eq!(
+            game.get_possible_moves("B1".to_string()).unwrap().sort(),
+            vec!["A3".to_string(), "C3".to_string(),].sort()
+        );
+        // move B1 to C3
+        assert_eq!(
+            game.make_move("B1".to_string(), "C3".to_string()),
+            Some(GameState::InProgress)
+        );
+        assert_eq!(
+            game.get_possible_moves("C3".to_string()).unwrap().sort(),
+            vec![
+                "B5".to_string(),
+                "D5".to_string(),
+                "A4".to_string(),
+                "E4".to_string(),
+            ]
+            .sort()
         );
         println!("{:?}", game);
     }
