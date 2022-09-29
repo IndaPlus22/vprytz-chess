@@ -64,13 +64,19 @@ pub struct Game {
 impl Game {
     /// Initialises a new board with pieces.
     pub fn new() -> Game {
-        Game {
+        let mut game = Game {
             state: GameState::InProgress,
             board: [[None; BOARD_SIZE]; BOARD_SIZE],
-        }
+        };
+        // add pieces
+        game.setup_initial_board();
+
+        // return board
+        game
     }
 
     pub fn setup_initial_board(&mut self) -> () {
+        // calling this will also "reset board"
         let white_pawn = Some(Piece {
             color: Color::White,
             piece: PieceType::Pawn,
@@ -278,7 +284,7 @@ impl Game {
                 piece: PieceType::Rook,
                 ..
             }) => {
-                let mut vec: Vec<String> = Vec::with_capacity(5);
+                let vec: Vec<String> = Vec::with_capacity(5);
 
                 // get all possible moves in all directions
 
@@ -291,7 +297,7 @@ impl Game {
                 piece: PieceType::Bishop,
                 ..
             }) => {
-                let mut vec: Vec<String> = Vec::with_capacity(5);
+                let vec: Vec<String> = Vec::with_capacity(5);
 
                 return Some(vec);
             }
@@ -343,7 +349,7 @@ impl Game {
                 piece: PieceType::Queen,
                 ..
             }) => {
-                let mut vec: Vec<String> = Vec::with_capacity(5);
+                let vec: Vec<String> = Vec::with_capacity(5);
 
                 return Some(vec);
             }
@@ -480,8 +486,7 @@ mod tests {
     // check that game state is in progress after initialisation
     #[test]
     fn game_in_progress_after_init() {
-        let mut game = Game::new();
-        game.setup_initial_board();
+        let game = Game::new();
 
         println!("{:?}", game);
 
@@ -491,8 +496,7 @@ mod tests {
     // test converting pos to index
     #[test]
     fn convert_pos_to_index() {
-        let mut game = Game::new();
-        game.setup_initial_board();
+        let game = Game::new();
 
         assert_eq!(game.pos_to_index("a1".to_string()), (7, 0));
         assert_eq!(game.pos_to_index("B1".to_string()), (7, 1));
@@ -504,8 +508,7 @@ mod tests {
     // test index to pos
     #[test]
     fn convert_index_to_pos() {
-        let mut game = Game::new();
-        game.setup_initial_board();
+        let game = Game::new();
 
         assert_eq!(game.index_to_pos((0, 0)), "A8");
         assert_eq!(game.index_to_pos((7, 0)), "A1");
@@ -517,7 +520,6 @@ mod tests {
     #[test]
     fn test_pawn_moves() {
         let mut game = Game::new();
-        game.setup_initial_board();
 
         // test pawn moves
         // try white pawn
@@ -573,7 +575,6 @@ mod tests {
     #[test]
     fn test_knight_moves() {
         let mut game = Game::new();
-        game.setup_initial_board();
 
         println!("{:?}", game);
 
@@ -619,7 +620,6 @@ mod tests {
         use super::PieceType;
 
         let mut game = Game::new();
-        game.setup_initial_board();
 
         // assert that king cannot move
         assert_eq!(game.get_possible_moves("E1".to_string()), Some(vec![]));
