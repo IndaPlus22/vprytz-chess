@@ -5,6 +5,7 @@ use std::fmt;
 
 const BOARD_SIZE: usize = 8;
 
+/// Possible states of the game is represented using this enum.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum GameState {
     InProgress,
@@ -12,12 +13,14 @@ pub enum GameState {
     GameOver,
 }
 
+/// Possible colors for pieces is represented using this enum.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Color {
     White,
     Black,
 }
 
+// Possible types of pieces is represented using this enum.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum PieceType {
     King,
@@ -42,11 +45,25 @@ impl fmt::Display for PieceType {
     }
 }
 
+/// Represents a piece on the board.
+/// A piece has a color, a type and a variable that tells if it has moved at least once or not.
+/// A piece can be moved by calling the make_move() function.
+/// # Examples
+/// ```
+/// use vprytz_chess::Piece;
+/// use vprytz_chess::Color;
+/// use vprytz_chess::PieceType;
+/// let mut piece = Piece {
+///     color: vprytz_chess::Color::White,
+///     piece: vprytz_chess::PieceType::King,
+///     untouched: true,
+/// };
+/// ```
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Piece {
-    color: Color,
-    piece: PieceType,
-    untouched: bool,
+    pub color: Color,
+    pub piece: PieceType,
+    pub untouched: bool,
 }
 
 // copied base example from https://doc.rust-lang.org/rust-by-example/hello/print/print_display.html
@@ -56,6 +73,14 @@ impl fmt::Display for Piece {
     }
 }
 
+/// Represents a chess game, holding a board (2d array with all pieces) and the current state of the game.
+/// A new game can be created by calling the new() function.
+/// # Examples
+/// ```
+/// use vprytz_chess::Game;
+/// let mut game = Game::new();
+/// // call functions on game, to move pieces and so on
+/// ```
 pub struct Game {
     state: GameState,
     board: [[Option<Piece>; BOARD_SIZE]; BOARD_SIZE],
@@ -63,6 +88,11 @@ pub struct Game {
 
 impl Game {
     /// Initialises a new board with pieces.
+    /// # Examples
+    /// ```
+    /// use vprytz_chess::Game;
+    /// let mut game = Game::new();
+    /// ```
     pub fn new() -> Game {
         let mut game = Game {
             state: GameState::InProgress,
@@ -75,6 +105,13 @@ impl Game {
         game
     }
 
+    /// Sets up the initial board with pieces, called by new().
+    /// # Examples
+    /// ```
+    /// use vprytz_chess::Game;
+    /// let mut game = Game::new();
+    /// game.setup_initial_board(); // redundant since new() calls this function, but can be called again to "reset" board later on
+    /// ```
     pub fn setup_initial_board(&mut self) -> () {
         // calling this will also "reset board"
         let white_pawn = Some(Piece {
@@ -149,6 +186,12 @@ impl Game {
         ];
         self.board[1] = [black_pawn; BOARD_SIZE];
 
+        // empty pieces, this is here to clear any pieces that may have been moved here (reset board)
+        self.board[2] = [None; BOARD_SIZE];
+        self.board[3] = [None; BOARD_SIZE];
+        self.board[4] = [None; BOARD_SIZE];
+        self.board[5] = [None; BOARD_SIZE];
+
         self.board[6] = [white_pawn; BOARD_SIZE];
         self.board[7] = [
             white_rook,
@@ -164,6 +207,12 @@ impl Game {
 
     /// If the current game state is InProgress and the move is legal,
     /// move a piece and return the resulting state of the game.
+    /// # Examples
+    /// ```
+    /// use vprytz_chess::Game;
+    /// let mut game = Game::new();
+    /// game.make_move("D2".to_string(), "D4".to_string()); // move white pawn at D2 to D4 (will only be allowed if move is legal, checked by get_possible_moves())
+    /// ```
     pub fn make_move(&mut self, from: String, to: String) -> Option<GameState> {
         // check if move is legal by checking if "to" position is in get_possible_moves()
         let possible_moves = self.get_possible_moves(from.to_string());
@@ -203,14 +252,33 @@ impl Game {
     }
 
     /// Get the current game state.
+    /// # Examples
+    /// ```
+    /// use vprytz_chess::Game;
+    /// let mut game = Game::new();
+    /// game.get_game_state(); // returns GameState::InProgress
+    /// ```
     pub fn get_game_state(&self) -> GameState {
         self.state
     }
 
     /// If a piece is standing on the given tile, return all possible
-    /// new positions of that piece. Don't forget to the rules for check.
-    ///
-    /// (optional) Don't forget to include en passent and castling.
+    /// new positions of that piece.
+    /// # Examples
+    /// ```
+    /// use vprytz_chess::Game;
+    /// let mut game = Game::new();
+    /// game.get_possible_moves("D2".to_string()); // returns all possible moves for white pawn at D2
+    /// ```
+    /// # TODO
+    /// - check if move is legal (e.g. if king is in check after move)
+    /// - check if pawn can be promoted
+    /// - check if pawn can be captured en passant
+    /// - check for all types of pieces (not yet done)
+    /// # Panics
+    /// Panics if the given position is not on the board.
+    /// # Errors
+    /// Returns None if there is no piece on the given position.
     pub fn get_possible_moves(&self, postion: String) -> Option<Vec<String>> {
         let pos = self.pos_to_index(postion);
 
@@ -397,7 +465,11 @@ impl Game {
         }
     }
 
-    // convert two letter position to index in 2d array
+    /// Converts a string position on the board to a tuple of the row and column (index for 2d array)
+    /// # Arguments
+    /// * `pos` - A string representing the position on the board
+    /// # Returns
+    /// * A tuple of the row and column (index for 2d array)
     fn pos_to_index(&self, pos: String) -> (usize, usize) {
         // convert pos to lowercase non-borrowed string and then chars
         let pos = pos.to_lowercase();
