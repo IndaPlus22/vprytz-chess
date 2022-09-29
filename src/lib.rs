@@ -356,6 +356,35 @@ impl Game {
             }) => {
                 let mut vec: Vec<String> = Vec::with_capacity(5);
 
+                // make list of positions to check
+                let positions = [
+                    // one step, each direction (including diagonally)
+                    ((pos.0 as i32 - 1 * op), (pos.1 as i32 + 1)), // one square "forward" and one right
+                    ((pos.0 as i32 - 1 * op), (pos.1 as i32 - 1)), // one square "forward" and one left
+                    ((pos.0 as i32 + 1 * op), (pos.1 as i32 + 1)), // one square "backward" and one right
+                    ((pos.0 as i32 + 1 * op), (pos.1 as i32 - 1)), // one square "backward" and one left
+                    ((pos.0 as i32 + 1 * op), (pos.1 as i32)),     // one square "backward"
+                    ((pos.0 as i32 - 1 * op), (pos.1 as i32)),     // one square "forward"
+                    ((pos.0 as i32), (pos.1 as i32 + 1)),          // one square "right"
+                    ((pos.0 as i32), (pos.1 as i32 - 1)),          // one square "left"
+                ];
+
+                // TODO: check that any of the speicifed moves causes an enemy piece to be able to attack the king
+
+                // check for each position that it is on the board and that it is either empty or occupied by an enemy piece
+                for pos in positions.iter() {
+                    if pos.0 < 8
+                        && pos.0 >= 0
+                        && pos.1 < 8
+                        && pos.1 >= 0
+                        && (self.board[pos.0 as usize][pos.1 as usize].is_none()
+                            || self.board[pos.0 as usize][pos.1 as usize].unwrap().color
+                                != piece.unwrap().color)
+                    {
+                        vec.push(self.index_to_pos((pos.0 as usize, pos.1 as usize)));
+                    }
+                }
+
                 return Some(vec);
             }
             None => return None,
@@ -579,6 +608,45 @@ mod tests {
             game.make_move("C3".to_string(), "B5".to_string()),
             Some(GameState::InProgress)
         );
+        println!("{:?}", game);
+    }
+
+    // test some king moves
+    #[test]
+    fn test_king_moves() {
+        use super::Color;
+        use super::Piece;
+        use super::PieceType;
+
+        let mut game = Game::new();
+        game.setup_initial_board();
+
+        // assert that king cannot move
+        assert_eq!(game.get_possible_moves("E1".to_string()), Some(vec![]));
+
+        // create fake king in middle of board
+        game.board[3][3] = Some(Piece {
+            piece: PieceType::King,
+            color: Color::White,
+            untouched: true,
+        });
+
+        // assert that this newly created (fake) king can move only one square in any direction
+        assert_eq!(
+            game.get_possible_moves("D5".to_string()).unwrap().sort(),
+            vec![
+                "D6".to_string(),
+                "D4".to_string(),
+                "C6".to_string(),
+                "C5".to_string(),
+                "C4".to_string(),
+                "E6".to_string(),
+                "E5".to_string(),
+                "E4".to_string(),
+            ]
+            .sort()
+        );
+
         println!("{:?}", game);
     }
 }
