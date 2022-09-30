@@ -337,11 +337,6 @@ impl Game {
                     // forward (up/down) two (only if first move!)
                 }
 
-                if self.board[(pos.0 as i32 + 1 * op) as usize][pos.1].is_none() {
-                    vec.push(self.index_to_pos(((pos.0 as i32 + 1 * op) as usize, pos.1)));
-                    // downward (down/up) one
-                }
-
                 // attack moves only if the specified positions is occupied by an enemy piece
                 // we check that there is something there and that the piece there actually has a different color
                 // than our piece
