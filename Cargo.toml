@@ -2,6 +2,10 @@
 name = "vprytz-chess"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "A bad chess library"
+repository = "https://github.com/IndaPlus22/vprytz-chess"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
